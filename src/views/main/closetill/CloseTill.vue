@@ -4,7 +4,7 @@
             <v-tab>Summary</v-tab>
             <v-tab>Sales</v-tab>
         </v-tabs>
-        <v-tabs-items v-model="closeTillTab" class="grey lighten-4">
+        <v-tabs-items v-model="closeTillTab" class="transparent">
             <v-tab-item>
                 <v-row no-gutters>
                     <v-col cols="12" sm="7" class="pa-3">

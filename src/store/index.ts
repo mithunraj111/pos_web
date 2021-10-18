@@ -5,6 +5,7 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
+    env: 'http://localhost:5000/api/',
   },
   mutations: {
   },

@@ -9,13 +9,16 @@
       <v-btn class="hidden-md-and-up" icon @click="menuSidebar=!menuSidebar"><v-icon>mdi-menu</v-icon></v-btn>
       <v-menu>
         <template v-slot:activator="{ on, attrs }">
-          <v-btn icon @click="menuSidebar=!menuSidebar" v-bind="attrs" v-on="on">
+          <v-btn icon v-bind="attrs" v-on="on">
             <v-icon>mdi-account-circle</v-icon>
           </v-btn>
         </template>
         <v-list dense>
           <v-list-item>
             <v-list-item-title><v-icon small left>mdi-battlenet</v-icon>Adjust Float</v-list-item-title>
+          </v-list-item>
+          <v-list-item link @click="changeTheme();">
+            <v-list-item-title><v-icon small left>mdi-theme-light-dark</v-icon>Theme</v-list-item-title>
           </v-list-item>
           <v-list-item @click="changePwdDialog=true">
             <v-list-item-title><v-icon small left>mdi-cog-outline</v-icon>Change Pin</v-list-item-title>
@@ -26,7 +29,7 @@
         </v-list>
       </v-menu>
     </v-app-bar>
-    <v-navigation-drawer app clipped :permanent="checkIfPermanent" :mini-variant="true" v-model="menuSidebar">
+    <v-navigation-drawer app clipped :permanent="checkIfPermanent" :mini-variant="true" v-model="menuSidebar" :style="checkIfPermanent?'top:48px!important':''">
       <v-list>
         <v-list-item v-for="(link,key) in navigationList" :key="key" :to="link.to" link>
           <v-tooltip bottom>
@@ -83,7 +86,10 @@ export default Vue.extend({
       navigationList: [
         {name: 'Home', shape: 'mdi-home' , to: '/home'},
         {name: 'Summary', shape: 'mdi-information' , to: '/summary'},
-        {name: 'Till', shape: 'mdi-cash-register' , to: '/close-till'}
+        {name: 'Till', shape: 'mdi-cash-register' , to: '/close-till'},
+        {name: 'Categories', shape: 'mdi-sitemap' , to: '/categories'},
+        {name: 'Products', shape: 'mdi-archive' , to: '/products'},
+
       ],
       menuSidebar: false,
       changePwdDialog: false,
@@ -101,6 +107,18 @@ export default Vue.extend({
         case 'lg': return true
         case 'xl': return true
       }
+    }
+  },
+  methods:{
+    changeTheme: function(){
+        console.log(localStorage.theme);
+        if(localStorage.theme && localStorage.theme == 'dark'){
+          this.$vuetify.theme.dark = false;
+          localStorage.theme = 'light';
+        } else{
+          this.$vuetify.theme.dark = true;
+          localStorage.theme = 'dark';
+        }
     }
   }
 
