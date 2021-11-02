@@ -130,7 +130,7 @@
                 this.isVariable = false;
                 this.isMcp = false;
                 this.isCustomisable = false
-                this.editView=false;
+                this.editView=true;
             },
             editProduct: function(obj:any){
                 this.addEditText='Edit Product';
@@ -155,7 +155,7 @@
                     iscustomizable: this.isCustomisable,
                     mcparr: this.mcpArr
                 }
-                if(this.editView){
+                if(this.selectedId){
                     requestObj.productid = this.selectedId;
                     requestObj.status = this.productStatus;
                     apiUrl += 'updateproduct';
@@ -163,10 +163,11 @@
                     requestObj.status= 'A',
                     apiUrl += 'createproduct';
                 }
-                console.log(this.editView);
-                console.log(apiUrl);
                 axios.post(apiUrl, requestObj).then((response: {data:any}) => {
+                    this.editView = false;
                     console.log(response);
+                }).catch((err)=>{
+                    console.log(err);
                 });
             },
             // getCategories:function (){
