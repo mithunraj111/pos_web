@@ -130,7 +130,7 @@
                 this.isVariable = false;
                 this.isMcp = false;
                 this.isCustomisable = false
-                this.editView=true;
+                this.editView=false;
             },
             editProduct: function(obj:any){
                 this.addEditText='Edit Product';
@@ -163,6 +163,8 @@
                     requestObj.status= 'A',
                     apiUrl += 'createproduct';
                 }
+                console.log(this.editView);
+                console.log(apiUrl);
                 axios.post(apiUrl, requestObj).then((response: {data:any}) => {
                     console.log(response);
                 });

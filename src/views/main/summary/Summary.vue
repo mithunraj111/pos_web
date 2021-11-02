@@ -107,7 +107,7 @@ export default Vue.extend({
                 this.showHideAlert('error', 'Internal Server error');
             })
         },
-        findEvent: function(page){
+        findEvent: function(page:any){
             console.log(page)
         },
         showHideAlert: function(type:String, text:String){
