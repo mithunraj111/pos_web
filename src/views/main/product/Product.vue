@@ -48,8 +48,14 @@
                             <v-col cols="11">
                                 <v-row justify="space-between" align="center">
                                     {{key+1}}
-                                    <v-col><v-text-field v-model="sname[n.id]" label="Sub-product name" outlined dense hide-details></v-text-field></v-col>
-                                    <v-col><v-text-field v-model="sprice[n.id]" label="Sub-product price" outlined dense number hide-details></v-text-field></v-col>
+                                    <v-col class="pb-0"><v-text-field v-model="sname[n.id]" label="Sub-product name" outlined dense hide-details></v-text-field></v-col>
+                                    <v-col class="pb-0"><v-text-field v-model="sprice[n.id]" label="Sub-product price" outlined dense number hide-details></v-text-field></v-col>
+                                </v-row>
+                            </v-col>
+                            <v-col cols="11">
+                                <v-row justify="end" align="center">
+                                    <v-switch v-model="svariable[n.id]" label="Is variable?" class="mb-3" dense inset hide-details></v-switch>
+                                    <v-switch v-model="scustomisable[n.id]" label="Is customisable" class="mb-3 mx-3" dense inset hide-details></v-switch>
                                     <v-btn icon @click="deleteSubProduct(key)"><v-icon>mdi-delete-outline</v-icon></v-btn>
                                 </v-row>
                             </v-col>
@@ -100,8 +106,11 @@
                 isMcp: false,
                 sname: [] as any,
                 sprice: [] as any,
+                svariable: [] as any,
+                scustomisable: [] as any,
                 addCategoryDialog: false,
-                categoryName: ''
+                categoryName: '',
+                mcpArr: []as any
             }
         },
         methods:{
@@ -124,7 +133,7 @@
                 this.editView=true;
             },
             editProduct: function(obj:any){
-                this.addEditText='EditProduct';
+                this.addEditText='Edit Product';
                 this.selectedId = obj.productid;
                 this.name = obj.productname;
                 this.category = obj.categoryid;
@@ -143,7 +152,8 @@
                     price: this.price,
                     isvariable: this.isVariable,
                     ismcp: this.isMcp,
-                    iscustomizable: this.isCustomisable
+                    iscustomizable: this.isCustomisable,
+                    mcparr: this.mcpArr
                 }
                 if(this.editView){
                     requestObj.productid = this.selectedId;

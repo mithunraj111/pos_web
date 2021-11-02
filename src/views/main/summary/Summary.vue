@@ -35,50 +35,98 @@
         </v-row>
         <v-row>
             <v-col cols="12">
-                <v-data-table :headers="summaryTableHeaders" :items="summaryList"  disable-pagination hide-default-footer></v-data-table>
+                <v-data-table :headers="summaryTableHeaders" :items="summaryList" :server-items-length="totalRows" :loading="loading">
+                    <template v-slot:[`item.diningId`]="{ item }">
+                        <span>{{item.diningId=='1'?'Dine In':item.diningId=='2'?'Take Away':'Delivery'}}</span>
+                    </template>
+                    <template v-slot:[`item.orderstatus`]="{ item }">
+                        <span>{{item.orderstatus=='1'?'Ordered':item.orderstatus=='2'?'Deleted':item.orderstatus=='3'?'Pending':item.orderstatus=='4'?'Hold':'Paid'}}</span>
+                    </template>
+                    <template v-slot:[`item.action`]="{ item }">
+                        <v-btn icon><v-icon>mdi-pencil</v-icon></v-btn>
+                        <v-btn icon @click="deleteOrderSummary(item)"><v-icon>mdi-delete</v-icon></v-btn>
+                    </template>
+                </v-data-table>
+                <!-- <v-pagination v-model="page" :length="totalRows" :total-visible="5" @input="findEvent()"></v-pagination> -->
             </v-col>
         </v-row>
+        <v-alert :value="showAlert" :type="alertType" border="left" transition="scale-transition" class="alertPos" >{{alertText}}</v-alert>
     </div>
 </template>
 <script lang="ts">
 import Vue from 'vue'
+import axios from 'axios';
+import store from '../../../store'
 export default Vue.extend({
     data: () => ({
+        env: store.state.env,
         transactionStatus:['Completed', 'Failed', 'On Hold'],
         startDateToggle: false,
         startDate: new Date().toISOString().substr(0, 10),
         endDateToggle: false,
         endDate: new Date().toISOString().substr(0, 10),
         summaryTableHeaders: [
-            {text:'Order Id',value:'orderId'},
-            {text:'Amount',value:'amount'},
-            {text:'Date Time',value:'dateTime'},
-            {text:'Status',value:'status'},
-            {text:'Action',value:'action'},
+            {text:'Order Id',value:'orderId', sortable: false},
+            {text:'Quantity',value:'qty', sortable: false},
+            {text:'Amount',value:'Total', sortable: false},
+            {text:'Dining type',value:'diningId', sortable: false},
+            {text:'Status',value:'orderstatus', sortable: false},
+            {text:'Action',value:'action', sortable: false},
         ],
-        summaryList:[
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'},
-            {orderId:'OrderID123', amount: 2012,dateTime:'Jul 07, 1997', status:'Paid'}
-        ]
-    })
+        summaryList:[]as any,
+        showAlert: false,
+        alertType: 'success' as any,
+        alertText: ''as any,
+        totalRows: 0 as any,
+        page: 1,
+        loading: true,
+        options: {},
+    }),
+    methods: {
+        getOrderSummary: function(){
+            this.loading = true;
+            axios.get(this.env+'order/getorders').then((response:any) => {
+                this.summaryList = response.data.recordsets[0];
+                this.totalRows = Math.ceil(response.data.recordsets[0].length/10);
+                this.loading = false;
+            }).catch((err:any)=>{
+                this.loading = false;
+                this.showHideAlert('danger', 'Internal Server error');
+                console.log(err);
+            })
+        },
+        deleteOrderSummary: function(obj:any){
+            this.loading = true;
+            obj.orderstatus = 2;
+            axios.post(this.env+'order/updateorder',obj).then((response:any) => {
+                this.summaryList = response.data.recordsets[0];
+                this.loading = false;
+                this.showHideAlert('success','Order placed successfully.');
+            }).catch((err)=>{
+                this.loading = false;
+                this.showHideAlert('error', 'Internal Server error');
+            })
+        },
+        findEvent: function(page){
+            console.log(page)
+        },
+        showHideAlert: function(type:String, text:String){
+            this.alertType = type;
+            this.alertText = text;
+            this.showAlert = true;
+            setTimeout(() => {
+               this.showAlert = false; 
+            }, 3000);
+        }
+    },
+    mounted(){
+        this.getOrderSummary();
+    },
+    watch: {
+        options: {
+            handler(){this.getOrderSummary()},
+            deep: true,
+        },
+    }
 })
 </script>

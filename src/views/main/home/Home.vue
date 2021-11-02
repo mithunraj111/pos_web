@@ -19,9 +19,9 @@
                             <v-text-field dense outlined hide-details append-icon="mdi-magnify" v-model="searchText" label="Search for Products" @click:append="searchProducts()"></v-text-field>
                         </v-row>
                     </v-card-title>
-                    <v-card-text v-if="categoryType!='category' && selectedCategory.id">
+                    <v-card-text v-if="categoryType!='category' && selectedCategory.categoryid">
                         <v-row no-gutters>
-                            SELECTED CATEGORY: {{selectedCategory.name}}<v-icon small @click="unselectCategory()">mdi-close-box-outline</v-icon>
+                            SELECTED CATEGORY: {{selectedCategory.categoryname}}<v-icon small @click="unselectCategory()">mdi-close-box-outline</v-icon>
                         </v-row>
                     </v-card-text>
                     <v-row no-gutters style="max-height:calc(100vh - 175px);overflow:auto" v-if="categoryType!='products'">
@@ -44,16 +44,16 @@
                                         <v-tooltip bottom>
                                             <template v-slot:activator="{ on, attrs }">
                                                 <v-card-text v-bind="attrs" v-on="on" class="px-2 py-1 text-truncate secondary--text">
-                                                    <span>{{item.name}}</span>
+                                                    <span>{{item.categoryname}}</span>
                                                 </v-card-text>
                                             </template>
-                                            <span>{{item.name}}</span>
+                                            <span>{{item.categoryname}}</span>
                                         </v-tooltip>
                                     </v-card>
                                 </v-col>
                             </v-row>
                             <v-row no-gutters>
-                                <v-col class="pa-3" cols="12" md="4" lg="3" v-if="categoryType=='category'">
+                                <!-- <v-col class="pa-3" cols="12" md="4" lg="3" v-if="categoryType=='category'">
                                     <v-card min-height="100" @click="addMiscToCart()" class="cursor-pointer">
                                         <v-tooltip bottom>
                                             <template v-slot:activator="{ on, attrs }">
@@ -67,19 +67,19 @@
                                             <span>Misc</span>
                                         </v-tooltip>
                                     </v-card>
-                                </v-col>
+                                </v-col> -->
                                 <v-col class="pa-3" cols="12" md="4" lg="3" v-for="(item,key) in unmappedProductList" :key="key">
                                     <v-card min-height="100" @click="addToCart(item)" class="cursor-pointer">
                                         <v-tooltip bottom>
                                             <template v-slot:activator="{ on, attrs }">
                                                 <v-card-text v-bind="attrs" v-on="on" class="px-2 py-1 text-truncate">
-                                                    <span>{{item.name}}</span>
+                                                    <span>{{item.productname}}</span>
                                                 </v-card-text>
                                                 <v-card-text class="px-2 py-1 pos-bottom text-right">
                                                     <span>₹ {{item.price}}</span>
                                                 </v-card-text>
                                             </template>
-                                            <span>{{item.name}}</span>
+                                            <span>{{item.productname}}</span>
                                         </v-tooltip>
                                     </v-card>
                                 </v-col>
@@ -92,10 +92,10 @@
                                 <v-tooltip bottom>
                                     <template v-slot:activator="{ on, attrs }">
                                         <v-card-text v-bind="attrs" v-on="on" class="px-2 py-1 text-truncate">
-                                            <span>{{item.name}}<br/>₹ {{item.price}}</span>
+                                            <span>{{item.productname}}<br/>₹ {{item.price}}</span>
                                         </v-card-text>
                                     </template>
-                                    <span>{{item.name}}</span>
+                                    <span>{{item.productname}}</span>
                                 </v-tooltip>
                             </v-card>
                         </v-col>
@@ -104,12 +104,14 @@
             </v-col>
             <v-col cols="12" md="5" v-if="$vuetify.breakpoint.name=='md' || $vuetify.breakpoint.name=='lg' || $vuetify.breakpoint.name=='xl' || (activeTab == 'summary')">
                 <v-card>
-                    <v-card-title>Order</v-card-title>
+                    <v-card-title>Order <v-spacer></v-spacer>
+                        <v-select item-text="diningname" item-value="diningid" :items="diningOptions" v-model="diningId" label="Dining type" outlined dense hide-details></v-select>
+                    </v-card-title>
                     <v-card-text>
                         <v-data-table :headers="orderListHeader" :items="itemsInCart" 
                         :single-expand="singleExpand"
                         :expanded.sync="expanded"
-                        item-key="name"
+                        item-key="productid"
                         show-expand
                         dense disable-pagination hide-default-footer class="elevation-1 mb-3">
                             <template v-slot:[`item.quantity`]="{ item }">
@@ -164,14 +166,17 @@
                     </v-card-text>
                     <v-card-actions>
                         <v-row no-gutters>
-                            <v-col cols="4" class="pl-3 pr-1 pb-2">
+                            <v-col cols="3" class="pl-3 pr-1 pb-2">
+                                <v-btn class="primary secondary--text" block :disabled="itemsInCart.length<1" @click="confirmPayment(1)">Order</v-btn>
+                            </v-col>
+                            <v-col cols="3" class="pl-3 pr-1 pb-2">
                                 <v-btn class="primary secondary--text" block :disabled="itemsInCart.length<1" @click="paymentDialog=true;balanceAmount=Number(tenderAmount)-cartTotal">Pay</v-btn>
                             </v-col>
-                            <v-col cols="4" class="px-1 pb-2">
-                                <v-btn class="primary secondary--text" block :disabled="itemsInCart.length<1">Hold</v-btn>
+                            <v-col cols="3" class="px-1 pb-2">
+                                <v-btn class="primary secondary--text" block :disabled="itemsInCart.length<1" @click="confirmPayment(4)">Hold</v-btn>
                             </v-col>
-                            <v-col cols="4" class="pl-1 pr-3 pb-2">
-                                <v-btn class="primary secondary--text" block :disabled="itemsInCart.length<1">Clear</v-btn>
+                            <v-col cols="3" class="pl-1 pr-3 pb-2">
+                                <v-btn class="primary secondary--text" block :disabled="itemsInCart.length<1" @click="clearCart()">Clear</v-btn>
                             </v-col>
                         </v-row>
                     </v-card-actions>
@@ -237,10 +242,10 @@
                 <v-card-actions class="pb-5">
                     <v-row no-gutters>
                         <v-col cols="6" class="px-2">
-                            <v-btn class="primary secondary--text" block @click="paymentDialog=false;confirmPayment('cash')">Cash</v-btn>
+                            <v-btn class="primary secondary--text" block @click="paymentDialog=false;confirmPayment(5)">Cash</v-btn>
                         </v-col>
                         <v-col cols="6" class="px-2">
-                            <v-btn class="primary secondary--text" block @click="paymentDialog=false;confirmPayment('others')">Others</v-btn>
+                            <v-btn class="primary secondary--text" block @click="paymentDialog=false;confirmPayment(5)">Others</v-btn>
                         </v-col>
                     </v-row>
                 </v-card-actions>
@@ -308,6 +313,8 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <!-- <v-alert :value="showAlert" transition="scale-transition">{{alertText}}</v-alert> -->
+        <v-alert :value="showAlert" :type="alertType" border="left" transition="scale-transition" class="alertPos" >{{alertText}}</v-alert>
     </div>
 </template>
 
@@ -340,6 +347,11 @@
 .pos-bottom{
     position: absolute;
     bottom: 0;
+}
+.alertPos{
+    position: fixed!important;
+    top: 50px;
+    right: 10px;
 }
 // .home-section .v-data-table tr{
 //     td,th{

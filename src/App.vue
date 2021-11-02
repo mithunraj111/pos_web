@@ -23,4 +23,9 @@ html{
 .v-overlay {
   margin-top: env(safe-area-inset-top)!important;
 }
+.alertPos{
+    position: fixed!important;
+    top: 50px;
+    right: 10px;
+}
 </style>

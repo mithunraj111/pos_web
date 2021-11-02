@@ -6,46 +6,18 @@ export default Vue.extend({
         env: store.state.env,
         activeTab: 'products',
         categoryList: []as any,
-        categoryListTemp:[
-            {id:1, name:'Category 1'},
-            {id:2, name:'Category 2'},
-            {id:3, name:'Category 3'},
-            {id:4, name:'Category 4', parentId: 1},
-            {id:5, name:'Category 5'},
-            {id:6, name:'Category 6'},
-        ],
+        categoryListTemp:[]as any,
         productList: []as any,
-        productListTemp:[
-            {id:1, name:'Evolution aqua pure aquarium', price: 3000, category_id: 1},
-            {id:2, name:'Electroprime aquarium', price: 2500, category_id: 2},
-            {id:3, name:'Product 3', price: 300, category_id: 4},
-            {id:4, name:'Product 4', price: 1800, category_id: 1},
-            {id:5, name:'Product 5', price: 900, category_id: 1},
-            {id:6, name:'Product 6', price: 880, category_id: 1},
-            {id:7, name:'Product 7', price: 1200, category_id: 1},
-            {id:8, name:'Product 8', price: 1500, category_id: 1},
-            {id:9, name:'Product 9', price: 250, category_id: 1},
-            {id:10, name:'Product 10', price: 45, category_id:1},
-            {id:11, name:'Product 11', price: 1250, category_id: 1},
-            {id:12, name:'Product 12', price: 350, category_id: 5},
-            {id:13, name:'Product 7', price: 1200, category_id: 1},
-            {id:14, name:'Product 8', price: 1500, category_id: 1},
-            {id:15, name:'Product 9', price: 250, category_id: 1},
-            {id:16, name:'Product 10', price: 45, category_id:2},
-            {id:17, name:'Product 11', price: 1250, category_id: 1},
-            {id:18, name:'Product 12', price: 350, category_id: 5},
-            {id:19, name:'Product 13', price: 370, category_id: ''},
-            {id:20, name:'Product 14', price: 450, category_id: ''},
-        ],
+        productListTemp:[]as any,
         unmappedProductList: []as any,
         showMiscProduct: true,
         miscPrice: ''as any,
         itemsInCart: []as any,
         orderListHeader: [
-            {text:'Name', value:'name', sortable: false},
+            {text:'Name', value:'productname', sortable: false},
             {text:'Price', value:'price', sortable: false},
-            {text:'Quantity', value:'quantity', sortable: false, align: 'center'},
-            {text:'Amount', value:'amount', sortable: false, align: 'right'}
+            {text:'Quantity', value:'qty', sortable: false, align: 'center'},
+            {text:'Amount', value:'total', sortable: false, align: 'right'}
         ],
         expanded: [],
         singleExpand: true,
@@ -78,48 +50,51 @@ export default Vue.extend({
         addMiscProductDialog: false,
         notesTemp: '',
         selectedObj: '' as any,
-        diningId: ''as any,
+        diningId: 1,
+        diningOptions: [
+            {diningid: 1,diningname: 'Dine in'},
+            {diningid: 2,diningname: 'Take away'},
+            {diningid: 3,diningname: 'Delivery'}
+        ],
         paymentMethod: ''as any,
-        orderStatus: ''as any
+        orderStatus: ''as any,
+        showAlert: false,
+        alertType: 'success' as any,
+        alertText: ''as any,
     }),
     mounted(){
         this.getProductCategory()
     },
     methods:{
         getProductCategory:function (){
-            axios.get(this.env+'category_product/getcategoryproduct').then((response: {data:any}) => {
-                // this.productList = this.productListTemp = response.data.recordsets[1];
-                // this.categoryList = this.categoryListTemp = response.data.recordsets[0];
+            axios.get(this.env+'category_product/getcategoryproduct').then((response:any) => {
+                this.productList = this.productListTemp = response.data.recordsets[1];
+                this.categoryList = this.categoryListTemp = response.data.recordsets[0];
+                console.log(response.data.recordsets);
                 this.productList = this.productListTemp;
                 this.categoryList = this.categoryListTemp;
-                this.unmappedProductList = this.productList.filter((i:any)=>{
-                    return i.category_id == '';
-                })
+                this.unmappedProductList = this.productList.filter((i:any)=>{return i.categoryid == ''})
+            }).catch((err:any)=>{
+                this.showHideAlert('danger', 'Internal Server error');
+                console.log(err);
             })
         },
         openProducts: function(obj:any){
-            this.categoryListTemp = this.categoryList.filter((i:any)=>{
-                return i.parentId == obj.id;
+            this.productListTemp = this.productList.filter((i:any)=>{
+                console.log(i.categoryid);
+                console.log(obj.categoryid);
+                return i.categoryid == obj.categoryid;
             });
-            if(this.categoryListTemp.length>0){
-                this.unmappedProductList = this.productList.filter((i:any)=>{
-                    return i.category_id == obj.id;
-                })
-                this.categoryType = 'subCategory';
-            } else {
-                this.productListTemp = this.productList.filter((i:any)=>{
-                    return i.category_id == obj.id;
-                });
-                this.selectedCategory = obj;
-                this.categoryType = 'products';      
-            }
+            console.log(this.productListTemp);
+            this.selectedCategory = obj;
+            this.categoryType = 'products';      
         },
         unselectCategory: function(){
             this.productListTemp = this.productList.filter((i:any)=>{
-                return i.name.toLowerCase().match(`${this.searchText.toLowerCase()}.*`);
+                return i.productname.toLowerCase().match(`${this.searchText.toLowerCase()}.*`);
             })
             this.unmappedProductList = this.productList.filter((i:any)=>{
-                return i.category_id == '';
+                return i.categoryid == '';
             })
             this.selectedCategory = {};
         },
@@ -128,16 +103,16 @@ export default Vue.extend({
             this.categoryType = 'category';
             this.searchText = '';
             this.unmappedProductList = this.productList.filter((i:any)=>{
-                return i.category_id == '';
+                return i.categoryid == '';
             })
         },
         searchProducts: function(){
             this.categoryType = 'products';
             this.productListTemp = this.productList.filter((i:any)=>{
-                if(this.selectedCategory.name){
-                    return i.name.toLowerCase().match(`${this.searchText.toLowerCase()}.*`) && (i.category_id == this.selectedCategory.id) ;
+                if(this.selectedCategory.categoryname){
+                    return i.productname.toLowerCase().match(`${this.searchText.toLowerCase()}.*`) && (i.categoryid == this.selectedCategory.categoryid) ;
                 } else {
-                    return i.name.toLowerCase().match(`${this.searchText.toLowerCase()}.*`);
+                    return i.productname.toLowerCase().match(`${this.searchText.toLowerCase()}.*`);
                 }
             })
         },
@@ -145,19 +120,19 @@ export default Vue.extend({
             this.addMiscProductDialog = true;
         },
         addToCart: function(obj:any) {
-            let isSelected = this.itemsInCart.find((item:any) => item.id == obj.id);
+            let isSelected = this.itemsInCart.find((item:any) => item.productid == obj.productid);
             if(isSelected){
                 this.changeQuantity(obj,'plus');
                 return;
             } else{
-                obj.quantity=1;
+                obj.qty=1;
             }
+            obj.orderedproductid = "";
+            obj.orderid = "";
+            obj.total = (obj.qty * obj.price).toFixed(2);
+            obj.mcp = [];
             this.itemsInCart.push(obj);
             this.cartSubTotal += obj.price;
-            // let taxAmount = 0;
-            // this.taxList.forEach((element:any) => {
-            //     taxAmount += (Number(this.cartSubTotal)/100) * Number(element.taxPercent);
-            // });
             if(this.discountType == 'Percentage'){
                 this.cartDiscount = (this.cartSubTotal/100)*this.discountValue;
             } else {
@@ -167,22 +142,31 @@ export default Vue.extend({
             // this.cartTotal = Number(this.cartSubTotal) - Number(this.cartDiscount) + taxAmount;
         },
         removeFromCart: function(obj:any){
-            this.changeQuantity(obj,'minus');
+            this.changeQuantity(obj,'remove');
             this.itemsInCart = this.itemsInCart.filter((i:any) =>{
-                return i.id != obj.id
+                return i.productid != obj.productid
             })
         },
         changeQuantity: function(obj:any, type:any){
             for(let i=0;i<this.itemsInCart.length;i++){
-                if(this.itemsInCart[i].id == obj.id){
-                    if(type =='minus'){this.itemsInCart[i].quantity=this.itemsInCart[i].quantity - 1;} 
-                    else {this.itemsInCart[i].quantity=this.itemsInCart[i].quantity + 1;}
+                if(this.itemsInCart[i].productid == obj.productid){
+                    if(type =='minus'){
+                        this.itemsInCart[i].qty=this.itemsInCart[i].qty - 1;
+                        this.itemsInCart[i].total = (this.itemsInCart[i].qty * this.itemsInCart[i].price).toFixed(2);
+                    } else if (type=='plus') {
+                        this.itemsInCart[i].qty=this.itemsInCart[i].qty + 1;
+                        this.itemsInCart[i].total = (this.itemsInCart[i].qty * this.itemsInCart[i].price).toFixed(2);
+                    }
+                    console.log(this.itemsInCart[i]);
                     break;
                 }
             }
             if(type=='minus'){
                 this.cartSubTotal = Number(this.cartSubTotal) - Number(obj.price);
-            } else{
+            }else if(type=="remove"){
+                this.cartSubTotal = Number(this.cartSubTotal) - Number(obj.total);
+            }else{
+                console.log('else');
                 this.cartSubTotal = Number(this.cartSubTotal) + Number(obj.price);
             }
             // let taxAmount = 0;
@@ -225,9 +209,9 @@ export default Vue.extend({
         },
         saveDiscountPerProductValue: function(){
             this.discountPerProductValue = this.discountPerProductTemp;
-            let index = this.itemsInCart.findIndex((i:any)=> i.id ==this.selectedObj.id)
+            let index = this.itemsInCart.findIndex((i:any)=> i.productid ==this.selectedObj.productid)
             this.itemsInCart[index].discountType = this.discountPerProductType;
-            let itemAmount = this.itemsInCart[index].price * this.itemsInCart[index].quantity;
+            let itemAmount = this.itemsInCart[index].price * this.itemsInCart[index].qty;
             if(this.discountPerProductType == 'Percentage'){
                 this.itemsInCart[index].discountValue = this.discountPerProductTemp;
                 this.cartDiscount = (this.cartSubTotal/100)*this.discountValue;
@@ -267,18 +251,37 @@ export default Vue.extend({
             // this.confirmPaymentDialog = true;
             let apiUrl = `${this.env}order/createorder`;
             let requestObj = {}as any;
+            this.orderStatus = type;
+            //Dine in 1, takeaway 2, delivery 3
+            //order 1, delete 2, pending 3, hold 4, payment 5
             requestObj={
+                customerid: "",    
+                customeraccid: "",
+                qty: 1,
+                fromorder: 'POS',
                 total: this.cartTotal,
-                lead: 'POS',
                 diningid: this.diningId,
                 paymentmethod: this.paymentMethod,
+                orderid: "",
                 orderstatus: this.orderStatus,
-                orderedProduct: this.itemsInCart
+                orderedproduct: this.itemsInCart
             };
             console.log(requestObj);
-            return 0;
-            axios.post(apiUrl, requestObj).then((response:{data:any})=>{
-                console.log(response);
+            // return 0;
+            axios.post(apiUrl, requestObj).then((response)=>{
+                this.clearCart();
+                let msg = '';
+                if(this.orderStatus == '1'){
+                    msg = 'Order placed successfully.';
+                } else if(this.orderStatus == '4'){
+                    msg = 'Order placed on hold successfully.';
+                } else if(this.orderStatus == '5'){
+                    msg = 'Payment successful';
+                }
+                this.showHideAlert('success',msg);
+            }).catch((err:any)=>{
+                this.showHideAlert('danger', 'Internal Server error');
+                console.log(err);
             })
         },
         editNote: function(obj: any){
@@ -286,10 +289,25 @@ export default Vue.extend({
             this.selectedObj = obj;
         },
         saveProductNotes: function(){
-            let index = this.itemsInCart.findIndex((i:any)=> i.id ==this.selectedObj.id)
+            let index = this.itemsInCart.findIndex((i:any)=> i.productid ==this.selectedObj.productid)
             this.itemsInCart[index].notes = this.notesTemp;
             this.notesEditDialog = false;
             this.notesTemp = '';
+        },
+        showHideAlert: function(type:String, text:String){
+            this.alertType = type;
+            this.alertText = text;
+            this.showAlert = true;
+            setTimeout(() => {
+               this.showAlert = false; 
+            }, 3000);
+        },
+        clearCart: function(){
+            this.itemsInCart = [];
+            this.cartTotal = 0;
+            this.cartSubTotal = 0;
+            this.cartDiscount = 0;
+            this.diningId = 1;
         }
-    },
+    }
 })
