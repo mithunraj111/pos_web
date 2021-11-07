@@ -43,7 +43,7 @@
                         <span>{{item.orderstatus=='1'?'Ordered':item.orderstatus=='2'?'Deleted':item.orderstatus=='3'?'Pending':item.orderstatus=='4'?'Hold':'Paid'}}</span>
                     </template>
                     <template v-slot:[`item.action`]="{ item }">
-                        <v-btn icon><v-icon>mdi-pencil</v-icon></v-btn>
+                        <v-btn icon @click="editOrderSummary(item)"><v-icon>mdi-pencil</v-icon></v-btn>
                         <v-btn icon @click="deleteOrderSummary(item)"><v-icon>mdi-delete</v-icon></v-btn>
                     </template>
                 </v-data-table>
@@ -95,13 +95,18 @@ export default Vue.extend({
                 console.log(err);
             })
         },
+        editOrderSummary: function(obj:any){
+            this.$router.push({name:'Home',query:{orderId: obj.orderId}});
+        },
         deleteOrderSummary: function(obj:any){
             this.loading = true;
-            obj.orderstatus = 2;
-            axios.post(this.env+'order/updateorder',obj).then((response:any) => {
-                this.summaryList = response.data.recordsets[0];
+            let requestObj ={
+                orderid: obj.orderId
+            }
+            axios.delete(this.env+'order/deleteorder',{data:requestObj}).then((response:any) => {
+                // this.summaryList = response.data.recordsets[0];
                 this.loading = false;
-                this.showHideAlert('success','Order placed successfully.');
+                this.showHideAlert('success','Order deleted successfully.');
             }).catch((err)=>{
                 this.loading = false;
                 this.showHideAlert('error', 'Internal Server error');

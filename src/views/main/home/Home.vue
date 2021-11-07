@@ -143,7 +143,7 @@
                         <v-container>
                             <v-row align="center">
                                 <v-col class="py-1 px-4" cols="6">Subtotal</v-col>
-                                <v-col cols="6" class="py-1 px-4 text-right">{{cartSubTotal}}</v-col>
+                                <v-col cols="6" class="py-1 px-4 text-right">{{cartSubTotal|toFixedNumb}}</v-col>
                             </v-row>
                             <v-row align="center">
                                 <v-col class="py-1 px-4" cols="6">
@@ -160,7 +160,7 @@
                             </v-row> -->
                             <v-row align="center">
                                 <v-col class="py-1 px-4" cols="6">Total</v-col>
-                                <v-col cols="6" class="py-1 px-4 text-right">{{cartTotal}}</v-col>
+                                <v-col cols="6" class="py-1 px-4 text-right">{{cartTotal|toFixedNumb}}</v-col>
                             </v-row>
                         </v-container>
                     </v-card-text>
@@ -203,20 +203,20 @@
             <v-card>
                 <v-card-title>
                     <v-icon left @click="paymentDialog=false">mdi-arrow-left-bold-box-outline</v-icon>
-                    Payment<v-spacer></v-spacer>₹ {{cartTotal}}
+                    Payment<v-spacer></v-spacer>₹ {{cartTotal|toFixedNumb}}
                 </v-card-title>
                 <v-card-text>
                     <v-row>
                         <v-col cols="6">
                             <div class="disabled-input align-center">
                                 <label>Tender</label>
-                                <span>{{tenderAmount}}</span>
+                                <span>{{tenderAmount|toFixedNumb}}</span>
                             </div>
                         </v-col>
                         <v-col cols="6">
                             <div class="disabled-input align-center">
                                 <label>Balance</label>
-                                <span>{{balanceAmount}}</span>
+                                <span>{{balanceAmount|toFixedNumb}}</span>
                             </div>
                         </v-col>
                     </v-row>
@@ -234,7 +234,7 @@
                                 <v-col cols="12"><v-btn block class="primary--text pa-0" @click="enterDefinedAmount('50')">50</v-btn></v-col>
                                 <v-col cols="12"><v-btn block class="primary--text pa-0" @click="enterDefinedAmount('100')">100</v-btn></v-col>
                                 <v-col cols="12"><v-btn block class="primary--text pa-0" @click="enterDefinedAmount('250')">250</v-btn></v-col>
-                                <v-col cols="12"><v-btn block class="primary--text pa-0" @click="enterDefinedAmount(cartTotal)">{{cartTotal}}</v-btn></v-col>
+                                <v-col cols="12"><v-btn block class="primary--text pa-0" @click="enterDefinedAmount(cartTotal)">{{cartTotal|toFixedNumb}}</v-btn></v-col>
                             </v-row>
                         </v-col>
                     </v-row>

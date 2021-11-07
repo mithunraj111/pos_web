@@ -34,6 +34,7 @@ export default Vue.extend({
         discountType: '',
         discountPerProductType: '',
         cartTotal: 0,
+        totalQty: 0,
         tenderAmount: '0',
         balanceAmount: 0,
         searchText: '',
@@ -63,17 +64,48 @@ export default Vue.extend({
         alertText: ''as any,
     }),
     mounted(){
-        this.getProductCategory()
+        this.getProductCategory();
+        if(this.$route.query.orderId){
+            this.getOrderDetail();
+        }
     },
     methods:{
         getProductCategory:function (){
             axios.get(this.env+'category_product/getcategoryproduct').then((response:any) => {
                 this.productList = this.productListTemp = response.data.recordsets[1];
                 this.categoryList = this.categoryListTemp = response.data.recordsets[0];
-                console.log(response.data.recordsets);
                 this.productList = this.productListTemp;
                 this.categoryList = this.categoryListTemp;
                 this.unmappedProductList = this.productList.filter((i:any)=>{return i.categoryid == ''})
+            }).catch((err:any)=>{
+                this.showHideAlert('danger', 'Internal Server error');
+                console.log(err);
+            })
+        },
+        getOrderDetail: function(){
+            axios.get(this.env+'order/getorderedproduct',{params:{orderid:this.$route.query.orderId}}).then((response:any)=>{
+                response.data.recordset.forEach((element:any) => {
+                    console.log(element);
+                    this.itemsInCart.push({
+                        productid: element.productId,
+                        productname: element.productName,
+                        price: element.price,
+                        qty: element.qty,
+                        total: element.total,
+                        orderid: element.orderId,
+                        orderedproductid: element.orderProductId,
+                        mcp: element.mcp
+                    })
+                    this.cartSubTotal += element.total;
+                    console.log(this.cartSubTotal);
+                    if(this.discountType == 'Percentage'){
+                        this.cartDiscount = (this.cartSubTotal/100)*this.discountValue;
+                    } else {
+                        this.cartDiscount = this.discountValue;
+                    }
+                    this.cartTotal = Number(this.cartSubTotal) - Number(this.cartDiscount);
+                });
+                console.log(this.itemsInCart);
             }).catch((err:any)=>{
                 this.showHideAlert('danger', 'Internal Server error');
                 console.log(err);
@@ -249,15 +281,19 @@ export default Vue.extend({
         // },
         confirmPayment: function(type: any){
             // this.confirmPaymentDialog = true;
-            let apiUrl = `${this.env}order/createorder`;
+            let apiUrl = `${this.env}order/`;
             let requestObj = {}as any;
             this.orderStatus = type;
             //Dine in 1, takeaway 2, delivery 3
             //order 1, delete 2, pending 3, hold 4, payment 5
+            this.totalQty = 0;
+            this.itemsInCart.forEach((element:any) => {
+                this.totalQty += element.qty
+            });
             requestObj={
                 customerid: "",    
                 customeraccid: "",
-                qty: 1,
+                qty: this.totalQty,
                 fromorder: 'POS',
                 total: this.cartTotal,
                 diningid: this.diningId,
@@ -266,8 +302,13 @@ export default Vue.extend({
                 orderstatus: this.orderStatus,
                 orderedproduct: this.itemsInCart
             };
-            console.log(requestObj);
-            // return 0;
+            if(this.$route.query.orderId){
+                requestObj.orderid=this.itemsInCart[0].orderid;
+                apiUrl+='updateorder';
+            } else{
+                apiUrl+='createorder';
+            }
+            
             axios.post(apiUrl, requestObj).then((response)=>{
                 this.clearCart();
                 let msg = '';
@@ -279,6 +320,7 @@ export default Vue.extend({
                     msg = 'Payment successful';
                 }
                 this.showHideAlert('success',msg);
+                this.$router.replace({name:'Home'});
             }).catch((err:any)=>{
                 this.showHideAlert('danger', 'Internal Server error');
                 console.log(err);
@@ -308,6 +350,13 @@ export default Vue.extend({
             this.cartSubTotal = 0;
             this.cartDiscount = 0;
             this.diningId = 1;
+            this.$router.replace({name:'Home'});
         }
-    }
+    },
+    filters: {
+        toFixedNumb: function (value:any) {
+          if (!value) {return 0.00}
+          return Number(value).toFixed(2);
+        }
+      }
 })
