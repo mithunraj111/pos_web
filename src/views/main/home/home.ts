@@ -265,6 +265,7 @@ export default Vue.extend({
             productObj.calculatedprice = calculatedprice;
             productObj.orderedproductid = "";
             productObj.orderid = "";
+            productObj.qty = 1;
             productObj.total = (obj.qty * calculatedprice).toFixed(2);
             if(productObj.ismcp == true){
                 productObj.mcp = this.multiplemcpgroups;

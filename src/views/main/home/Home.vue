@@ -114,6 +114,12 @@
                         item-key="key"
                         show-expand
                         dense disable-pagination hide-default-footer class="elevation-1 mb-3">
+                            <template v-slot:[`item.productname`]="{ item }">
+                                <div class="my-3">{{item.productname}}</div>
+                                <div v-for="(mcp,key) in item.mcp" :key="key">
+                                    <div style="white-space:nowrap" v-for="(selectedMcpProd, key) in mcp.selectedProduct" :key="key">{{selectedMcpProd.qty+' '+selectedMcpProd.productname+' '+selectedMcpProd.price}}</div>
+                                </div>
+                            </template>
                             <template v-slot:[`item.quantity`]="{ item }">
                                 <span class="mx-1">{{item.quantity}}</span>
                             </template>
@@ -201,6 +207,7 @@
         </v-dialog>
         <v-dialog v-model="addMcpToCartDialog" width="900" max-width="90%" persistent>
             <v-card>
+                <v-btn icon class="float-right" @click="addMcpToCartDialog=false"><v-icon>mdi-close-box-outline</v-icon></v-btn>
                 <v-card-title>
                     <v-row no-gutters>
                         <v-col v-for="(group,key) in groupListTemp" :key="key" class="pa-3" cols="3">
@@ -392,6 +399,9 @@
     position: fixed!important;
     top: 50px;
     right: 10px;
+}
+.v-data-table tbody tr td{
+    vertical-align: baseline;
 }
 // .home-section .v-data-table tr{
 //     td,th{
