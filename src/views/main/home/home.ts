@@ -9,13 +9,21 @@ export default Vue.extend({
         categoryListTemp:[]as any,
         productList: []as any,
         productListTemp:[]as any,
+        groupList:[]as any,
+        groupListTemp:[]as any,
         unmappedProductList: []as any,
+        selectedmcproduct: []as any,
+        selectedmcproductgroup: []as any,
+        selectedmcproductgroupindex: []as any,
+        multiplemcpgroups: []as any,
+        selectedProductForCart: {} as any,
         showMiscProduct: true,
         miscPrice: ''as any,
         itemsInCart: []as any,
+        itemsInCartCopy: []as any,
         orderListHeader: [
             {text:'Name', value:'productname', sortable: false},
-            {text:'Price', value:'price', sortable: false},
+            {text:'Price', value:'calculatedprice', sortable: false},
             {text:'Quantity', value:'qty', sortable: false, align: 'center'},
             {text:'Amount', value:'total', sortable: false, align: 'right'}
         ],
@@ -49,6 +57,7 @@ export default Vue.extend({
         discountPerProductEditDialog: false,
         notesEditDialog: false,
         addMiscProductDialog: false,
+        addMcpToCartDialog:false,
         notesTemp: '',
         selectedObj: '' as any,
         diningId: 1,
@@ -74,8 +83,7 @@ export default Vue.extend({
             axios.get(this.env+'category_product/getcategoryproduct').then((response:any) => {
                 this.productList = this.productListTemp = response.data.recordsets[1];
                 this.categoryList = this.categoryListTemp = response.data.recordsets[0];
-                this.productList = this.productListTemp;
-                this.categoryList = this.categoryListTemp;
+                this.groupList = this.groupListTemp = response.data.recordsets[2];
                 this.unmappedProductList = this.productList.filter((i:any)=>{return i.categoryid == ''})
             }).catch((err:any)=>{
                 this.showHideAlert('danger', 'Internal Server error');
@@ -85,11 +93,11 @@ export default Vue.extend({
         getOrderDetail: function(){
             axios.get(this.env+'order/getorderedproduct',{params:{orderid:this.$route.query.orderId}}).then((response:any)=>{
                 response.data.recordset.forEach((element:any) => {
-                    console.log(element);
                     this.itemsInCart.push({
+                        key: 0,
                         productid: element.productId,
                         productname: element.productName,
-                        price: element.price,
+                        calculatedprice: element.price,
                         qty: element.qty,
                         total: element.total,
                         orderid: element.orderId,
@@ -97,7 +105,6 @@ export default Vue.extend({
                         mcp: element.mcp
                     })
                     this.cartSubTotal += element.total;
-                    console.log(this.cartSubTotal);
                     if(this.discountType == 'Percentage'){
                         this.cartDiscount = (this.cartSubTotal/100)*this.discountValue;
                     } else {
@@ -105,7 +112,6 @@ export default Vue.extend({
                     }
                     this.cartTotal = Number(this.cartSubTotal) - Number(this.cartDiscount);
                 });
-                console.log(this.itemsInCart);
             }).catch((err:any)=>{
                 this.showHideAlert('danger', 'Internal Server error');
                 console.log(err);
@@ -113,11 +119,8 @@ export default Vue.extend({
         },
         openProducts: function(obj:any){
             this.productListTemp = this.productList.filter((i:any)=>{
-                console.log(i.categoryid);
-                console.log(obj.categoryid);
                 return i.categoryid == obj.categoryid;
             });
-            console.log(this.productListTemp);
             this.selectedCategory = obj;
             this.categoryType = 'products';      
         },
@@ -151,20 +154,125 @@ export default Vue.extend({
         addMiscToCart: function(){
             this.addMiscProductDialog = true;
         },
+        changemcproductQty: function(type:any,index:any,e:any){
+            if(type=='add' && this.selectedmcproductgroup.selectedCount == this.selectedmcproductgroup.max){ 
+                return 0; 
+            }
+            if(type=='add'){
+                this.selectedmcproductgroup.selectedCount++;
+                if(this.selectedmcproductgroup.mcproductgroup[index].qty==0){
+                    this.selectedmcproductgroup.mcproductgroup[index].qty++;
+                    this.selectedmcproductgroup.selectedProduct.push(this.selectedmcproductgroup.mcproductgroup[index]);
+                    this.selectedmcproduct.push(this.selectedmcproductgroup.mcproductgroup[index]);
+                } else {
+                    let ind = this.selectedmcproduct.findIndex((row:any)=>{
+                        return row.productid == this.selectedmcproductgroup.mcproductgroup[index].productid;
+                    })
+                    this.selectedmcproduct[ind].qty++;
+                }
+            } else {
+                e.stopPropagation();
+                if(this.selectedmcproductgroup.mcproductgroup[index].qty > 0){
+                    this.selectedmcproductgroup.selectedCount--;;
+                    this.selectedmcproductgroup.mcproductgroup[index].qty--;
+                    if(this.selectedmcproductgroup.mcproductgroup[index].qty==0){
+                        let i = this.selectedmcproductgroup.selectedProduct.findIndex((item:any)=>{
+                            return item.productid === this.selectedmcproductgroup.mcproductgroup[index].productid
+                        })
+                        this.selectedmcproductgroup.selectedProduct.splice(i,1);
+                    }
+                }
+            }
+        },
+        checkToAdd: function(obj:any){
+            this.selectedProductForCart = obj;
+            let selectedMcpArr = JSON.parse(obj.mcgroup);
+            let arr=[];
+            if(obj.ismcp){
+                for(let i=0;i<this.groupList.length;i++){
+                    if(typeof this.groupList[i].mcproductgroup == 'string'){
+                        this.groupList[i].mcproductgroup = this.groupListTemp[i].mcproductgroup = JSON.parse(this.groupList[i].mcproductgroup);
+                    }
+                    for(let k=0;k<this.groupList[i].mcproductgroup.length;k++){
+                        Vue.set(this.groupList[i].mcproductgroup[k],'qty',0);
+                        this.groupList[i].mcproductgroup[k].qty=this.groupListTemp[i].mcproductgroup[k].qty=0;
+                    }
+                    for(let j=0;j<selectedMcpArr.length;j++){
+                        if(this.groupList[i].groupid==selectedMcpArr[j].groupid){
+                            let groupObj = this.groupList[i];
+                            groupObj.min = selectedMcpArr[j].min;
+                            groupObj.max = selectedMcpArr[j].max;
+                            groupObj.selectedCount = 0;
+                            groupObj.selectedProduct = []as any;
+                            groupObj.groupname = selectedMcpArr[j].groupname;
+                            arr.push(groupObj);
+                            break;
+                        }
+                    }
+                }
+                this.groupListTemp = arr;
+                this.selectedmcproductgroupindex = 0;
+                this.selectedmcproductgroup = this.groupListTemp[this.selectedmcproductgroupindex];
+                this.addMcpToCartDialog =true;
+            } else {
+                this.addToCart(obj);
+            }
+        },
+        changemcpgroupindex: function(type:any){
+            if(type=='next'){
+                this.multiplemcpgroups[this.selectedmcproductgroupindex] = this.selectedmcproductgroup;
+                this.selectedmcproductgroupindex++;
+                if(this.multiplemcpgroups[this.selectedmcproductgroupindex]){
+                    this.selectedmcproductgroup = this.multiplemcpgroups[this.selectedmcproductgroupindex]
+                } else{
+                    this.selectedmcproductgroup = this.groupListTemp[this.selectedmcproductgroupindex];
+                }
+            } else if(type=='continue'){
+                this.multiplemcpgroups[this.selectedmcproductgroupindex] = this.selectedmcproductgroup;
+                this.addMcpToCartDialog =false;
+                this.addToCart(this.selectedProductForCart);
+            }else{
+                this.multiplemcpgroups[this.selectedmcproductgroupindex] = this.selectedmcproductgroup;
+                this.selectedmcproductgroupindex--;
+                this.selectedmcproductgroup = this.multiplemcpgroups[this.selectedmcproductgroupindex];
+            }
+        },
         addToCart: function(obj:any) {
+            let productObj = JSON.parse(JSON.stringify(obj));
+            let calculatedprice = 0;
             let isSelected = this.itemsInCart.find((item:any) => item.productid == obj.productid);
-            if(isSelected){
+            if(isSelected && obj.ismcp==false){
                 this.changeQuantity(obj,'plus');
                 return;
             } else{
+                if(obj.ismcp==true){
+                    this.multiplemcpgroups.forEach((element:any) => {
+                        element.selectedProduct.forEach((childElement:any) => {
+                            calculatedprice += Number(childElement.price);
+                        });
+                    });
+                } else {
+                    calculatedprice = obj.price;
+                }
                 obj.qty=1;
             }
-            obj.orderedproductid = "";
-            obj.orderid = "";
-            obj.total = (obj.qty * obj.price).toFixed(2);
-            obj.mcp = [];
-            this.itemsInCart.push(obj);
-            this.cartSubTotal += obj.price;
+            if(this.itemsInCart.length>0){
+                productObj.key = +this.itemsInCart[this.itemsInCart.length-1].key + 1;
+            } else {
+                productObj.key = 0;
+            }
+            productObj.calculatedprice = calculatedprice;
+            productObj.orderedproductid = "";
+            productObj.orderid = "";
+            productObj.total = (obj.qty * calculatedprice).toFixed(2);
+            if(productObj.ismcp == true){
+                productObj.mcp = this.multiplemcpgroups;
+            } else{
+                productObj.mcp = [];
+            }
+            this.itemsInCart.push(productObj);
+            JSON.parse(JSON.stringify(this.itemsInCart));
+            this.cartSubTotal += productObj.calculatedprice;
             if(this.discountType == 'Percentage'){
                 this.cartDiscount = (this.cartSubTotal/100)*this.discountValue;
             } else {
@@ -184,22 +292,20 @@ export default Vue.extend({
                 if(this.itemsInCart[i].productid == obj.productid){
                     if(type =='minus'){
                         this.itemsInCart[i].qty=this.itemsInCart[i].qty - 1;
-                        this.itemsInCart[i].total = (this.itemsInCart[i].qty * this.itemsInCart[i].price).toFixed(2);
+                        this.itemsInCart[i].total = (this.itemsInCart[i].qty * this.itemsInCart[i].calculatedprice).toFixed(2);
                     } else if (type=='plus') {
                         this.itemsInCart[i].qty=this.itemsInCart[i].qty + 1;
-                        this.itemsInCart[i].total = (this.itemsInCart[i].qty * this.itemsInCart[i].price).toFixed(2);
+                        this.itemsInCart[i].total = (this.itemsInCart[i].qty * this.itemsInCart[i].calculatedprice).toFixed(2);
                     }
-                    console.log(this.itemsInCart[i]);
                     break;
                 }
             }
             if(type=='minus'){
-                this.cartSubTotal = Number(this.cartSubTotal) - Number(obj.price);
+                this.cartSubTotal = Number(this.cartSubTotal) - Number(obj.calculatedprice);
             }else if(type=="remove"){
                 this.cartSubTotal = Number(this.cartSubTotal) - Number(obj.total);
             }else{
-                console.log('else');
-                this.cartSubTotal = Number(this.cartSubTotal) + Number(obj.price);
+                this.cartSubTotal = Number(this.cartSubTotal) + Number(obj.calculatedprice);
             }
             // let taxAmount = 0;
             // this.taxList.forEach((element:any) => {
@@ -243,7 +349,7 @@ export default Vue.extend({
             this.discountPerProductValue = this.discountPerProductTemp;
             let index = this.itemsInCart.findIndex((i:any)=> i.productid ==this.selectedObj.productid)
             this.itemsInCart[index].discountType = this.discountPerProductType;
-            let itemAmount = this.itemsInCart[index].price * this.itemsInCart[index].qty;
+            let itemAmount = this.itemsInCart[index].calculatedprice * this.itemsInCart[index].qty;
             if(this.discountPerProductType == 'Percentage'){
                 this.itemsInCart[index].discountValue = this.discountPerProductTemp;
                 this.cartDiscount = (this.cartSubTotal/100)*this.discountValue;

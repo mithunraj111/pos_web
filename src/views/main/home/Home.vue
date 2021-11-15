@@ -69,7 +69,7 @@
                                     </v-card>
                                 </v-col> -->
                                 <v-col class="pa-3" cols="12" md="4" lg="3" v-for="(item,key) in unmappedProductList" :key="key">
-                                    <v-card min-height="100" @click="addToCart(item)" class="cursor-pointer">
+                                    <v-card min-height="100" @click="checkToAdd(item)" class="cursor-pointer">
                                         <v-tooltip bottom>
                                             <template v-slot:activator="{ on, attrs }">
                                                 <v-card-text v-bind="attrs" v-on="on" class="px-2 py-1 text-truncate">
@@ -88,7 +88,7 @@
                     </v-row>
                     <v-row no-gutters style="max-height:calc(100vh - 175px);overflow:auto" v-else>
                         <v-col class="pa-3" cols="12" md="4" lg="3" v-for="(item,key) in productListTemp" :key="key">
-                            <v-card min-height="100" @click="addToCart(item)" class="cursor-pointer">
+                            <v-card min-height="100" @click="checkToAdd(item)" class="cursor-pointer">
                                 <v-tooltip bottom>
                                     <template v-slot:activator="{ on, attrs }">
                                         <v-card-text v-bind="attrs" v-on="on" class="px-2 py-1 text-truncate">
@@ -111,7 +111,7 @@
                         <v-data-table :headers="orderListHeader" :items="itemsInCart" 
                         :single-expand="singleExpand"
                         :expanded.sync="expanded"
-                        item-key="productid"
+                        item-key="key"
                         show-expand
                         dense disable-pagination hide-default-footer class="elevation-1 mb-3">
                             <template v-slot:[`item.quantity`]="{ item }">
@@ -186,16 +186,56 @@
         <v-dialog v-model="addMiscProductDialog" width="375" max-width="90%" persistent>
             <v-card>
                 <v-card-title>Enter the value for the miscellaneous product</v-card-title>
-                <v-card-body>
+                <v-card-text>
                     <v-row no-gutters>
                         <v-col class="px-5">
                             <v-text-field outlined dense v-model="miscPrice" label="Miscellaneous Price"></v-text-field>
                         </v-col>
                     </v-row>
-                </v-card-body>
+                </v-card-text>
                 <v-row no-gutters>
                     <v-col cols="12"><v-btn large block class="primary secondary--text rounded-0" @click="addMiscProductDialog=false;addMiscToCart('cash')">Continue</v-btn></v-col>
                     <v-col cols="12"><v-btn large block class="rounded-0" @click="addMiscProductDialog=false">Cancel</v-btn></v-col>
+                </v-row>
+            </v-card>
+        </v-dialog>
+        <v-dialog v-model="addMcpToCartDialog" width="900" max-width="90%" persistent>
+            <v-card>
+                <v-card-title>
+                    <v-row no-gutters>
+                        <v-col v-for="(group,key) in groupListTemp" :key="key" class="pa-3" cols="3">
+                            <v-card class="text-center" :class="selectedmcproductgroupindex==key?'primary secondary--text':''">{{group.groupname}}</v-card>
+                        </v-col>
+                    </v-row>
+                </v-card-title>
+                <v-card-text>
+                    <v-row no-gutters>
+                        <v-col cols="4" class="pa-3" v-for="(item,key) in selectedmcproductgroup.mcproductgroup" :key="key">
+                            <v-card class="pa-3" @click="changemcproductQty('add',key,$event)">
+                                <div>
+                                    {{item.productname}}
+                                    <span v-if="item.qty>0" class="float-right">
+                                        <v-chip outlined>{{item.qty}}</v-chip>
+                                        <v-btn icon @click="changemcproductQty('minus',key,$event)"><v-icon>mdi-minus-circle</v-icon></v-btn>
+                                    </span>
+                                </div>
+                                <br>
+                                <div class="text-right">{{item.price}}</div>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                    <v-row no-gutters>
+                        <v-col cols="12">
+                            <span v-if="selectedmcproductgroup.min==selectedmcproductgroup.max" >Please select {{selectedmcproductgroup.min}} item</span>
+                            <span v-else-if="selectedmcproductgroup.min==0">Please select upto {{selectedmcproductgroup.max}} items</span>
+                            <span v-else>Please select between {{selectedmcproductgroup.min}} and {{selectedmcproductgroup.max}} items</span>
+                        </v-col>
+                    </v-row>
+                </v-card-text>
+                <v-row no-gutters>
+                    <v-col cols="6"><v-btn large block class="rounded-0" @click="changemcpgroupindex('previous')" :disabled="selectedmcproductgroupindex==0">Previous</v-btn></v-col>
+                    <v-col v-if="groupListTemp.length-1!=selectedmcproductgroupindex" cols="6"><v-btn large block class="rounded-0" @click="changemcpgroupindex('next')" :disabled="selectedmcproductgroup.selectedCount<selectedmcproductgroup.min">Next</v-btn></v-col>
+                    <v-col v-if="groupListTemp.length-1==selectedmcproductgroupindex" cols="6"><v-btn large block class="rounded-0" @click="changemcpgroupindex('continue')" v-if="groupListTemp.length-1==selectedmcproductgroupindex" :disabled="selectedmcproductgroup.selectedCount<selectedmcproductgroup.min">Continue</v-btn></v-col>
                 </v-row>
             </v-card>
         </v-dialog>
