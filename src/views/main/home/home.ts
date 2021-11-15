@@ -248,7 +248,8 @@ export default Vue.extend({
                 if(obj.ismcp==true){
                     this.multiplemcpgroups.forEach((element:any) => {
                         element.selectedProduct.forEach((childElement:any) => {
-                            calculatedprice += Number(childElement.price);
+                            calculatedprice += (Number(childElement.price)*childElement.qty);
+                            console.log(calculatedprice);
                         });
                     });
                 } else {
