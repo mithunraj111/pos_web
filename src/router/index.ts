@@ -33,6 +33,10 @@ const routes: Array<RouteConfig> = [
         path: '/categories',
         name: 'Categories',
         component: () => import('../views/main/category/Category.vue')
+      }, {
+        path: '/mcp',
+        name: 'Mcp',
+        component: () => import('../views/main/mcp/Mcp.vue')
       }
     ]
   },

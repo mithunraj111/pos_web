@@ -62,7 +62,7 @@ export default Vue.extend({
     },
     methods:{
         getCategories:function (){
-            axios.get(this.env+'category_product/getcategoryproduct').then((response: {data:any}) => {
+            axios.get(this.env+'category_product/getcategory').then((response: {data:any}) => {
                 this.categoryList = response.data.recordset;
             })
         },

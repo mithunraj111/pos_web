@@ -89,6 +89,7 @@ export default Vue.extend({
         {name: 'Till', shape: 'mdi-cash-register' , to: '/close-till'},
         {name: 'Categories', shape: 'mdi-sitemap' , to: '/categories'},
         {name: 'Products', shape: 'mdi-archive' , to: '/products'},
+        {name: 'Mcp', shape: 'mdi-archive' , to: '/mcp'},
 
       ],
       menuSidebar: false,

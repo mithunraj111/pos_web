@@ -7,7 +7,10 @@
                         <v-btn icon v-if="editView" @click="editView=false"><v-icon>mdi-arrow-left-box</v-icon></v-btn>
                         {{editView?addEditText:'Product List'}}
                     </v-col>
-                    <v-col v-if="!editView" class="text-right"><v-btn icon @click="addProduct()"><v-icon>mdi-plus-circle</v-icon></v-btn></v-col>
+                    <v-col v-if="!editView" class="text-right">
+                        <v-btn icon @click="addProduct()"><v-icon>mdi-plus-circle</v-icon></v-btn>
+                        <v-btn icon @click="mcpMappingDialog=true"><v-icon>mdi-cog</v-icon></v-btn>
+                    </v-col>
                 </v-row>
             </v-card-title>
         </v-card>
@@ -31,36 +34,9 @@
                     <v-text-field v-model="price" label="Price" class="mb-3" outlined dense hide-details></v-text-field>
                     <v-select v-model="category" label="Category" class="mb-3" :items="categoryList" item-text="categoryname" item-value="categoryid" 
                         outlined dense append-outer-icon="mdi-plus-box-outline" hide-details @click:append-outer="openCategoryDialog()"></v-select>
-                    <v-switch v-model="productStatus" label="Status " class="mb-3" inset hide-details></v-switch>
+                    <v-switch v-model="productStatus" label="Status" class="mb-3" inset hide-details></v-switch>
                     <v-switch v-model="isVariable" label="Is variable?" class="mb-3" inset hide-details></v-switch>
-                    <v-switch v-model="isCustomisable" label="Is customisable" class="mb-3" inset hide-details></v-switch>
-                    <v-switch v-model="isMcp" label="Has multiple choice products?" class="mb-3" inset hide-details></v-switch>
-                    <div v-if="isMcp">
-                        <v-card-title class="px-0">
-                            <v-row justify="space-between">
-                                <v-col cols="11">Multiple choice products</v-col>
-                                <v-col cols="1" class="text-right">
-                                    <v-btn icon @click="addSubProduct()"><v-icon>mdi-plus-box-outline</v-icon></v-btn>
-                                </v-col>
-                            </v-row>
-                        </v-card-title>
-                        <v-row v-for="(n,key) in subProductArr" :key="key" justify="end">
-                            <v-col cols="11">
-                                <v-row justify="space-between" align="center">
-                                    {{key+1}}
-                                    <v-col class="pb-0"><v-text-field v-model="sname[n.id]" label="Sub-product name" outlined dense hide-details></v-text-field></v-col>
-                                    <v-col class="pb-0"><v-text-field v-model="sprice[n.id]" label="Sub-product price" outlined dense number hide-details></v-text-field></v-col>
-                                </v-row>
-                            </v-col>
-                            <v-col cols="11">
-                                <v-row justify="end" align="center">
-                                    <v-switch v-model="svariable[n.id]" label="Is variable?" class="mb-3" dense inset hide-details></v-switch>
-                                    <v-switch v-model="scustomisable[n.id]" label="Is customisable" class="mb-3 mx-3" dense inset hide-details></v-switch>
-                                    <v-btn icon @click="deleteSubProduct(key)"><v-icon>mdi-delete-outline</v-icon></v-btn>
-                                </v-row>
-                            </v-col>
-                        </v-row>
-                    </div>
+                    <v-switch v-model="isMcp" label="Is MCP?" class="mb-3" inset hide-details></v-switch>
                     <v-btn block large class="mt-5 primary secondary--text" @click="saveProduct()">Save</v-btn>
                 </v-col>
             </v-row>
@@ -79,6 +55,41 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <v-dialog v-model="mcpMappingDialog" width="500" max-width="90%">
+
+            <v-card>
+                <v-card-title></v-card-title>
+                <v-card-text>
+                    <v-select v-model="selectedGroups" :items="groupList" label="Select groups" multiple outlined item-text="groupid" item-value="groupid">
+                        <template v-slot:selection="{ item, index }">
+                            <v-chip v-if="index === 0"><span>{{ item }}</span></v-chip>
+                            <span v-if="index === 1" class="grey--text text-caption">(+{{ selectedGroups.length - 1 }} others)</span>
+                        </template>
+                    </v-select>
+                    <!-- <v-list dense>
+                        <v-list-item v-for="(item,key) in selectedGroups" :key="key">
+                            {{item}}
+                        </v-list-item>
+                    </v-list> -->
+                    <v-simple-table v-if="selectedGroups.length>0">
+                        <template v-slot:default>
+                            <thead>
+                                <tr>
+                                    <th class="text-left">Group Name</th>
+                                    <th class="text-left">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(item,key) in selectedGroups" :key="key">
+                                    <td>{{ item }}</td>
+                                    <td><v-btn icon><v-icon>mdi-delete</v-icon></v-btn></td>
+                                </tr>
+                            </tbody>
+                            </template>
+                    </v-simple-table>
+                </v-card-text>
+            </v-card>
+        </v-dialog>
     </div>
 </template>
 
@@ -93,6 +104,7 @@
                 env: store.state.env,
                 productList: [] as any,
                 categoryList: [] as any,
+                groupList: [] as any,
                 editView: false,
                 addEditText: 'Add Product',
                 subProductArr: [{id:1, name:'', price:''}]as any,
@@ -109,8 +121,10 @@
                 svariable: [] as any,
                 scustomisable: [] as any,
                 addCategoryDialog: false,
+                mcpMappingDialog: false,
                 categoryName: '',
-                mcpArr: []as any
+                mcpArr: []as any,
+                selectedGroups: []as any
             }
         },
         methods:{
@@ -118,7 +132,7 @@
                 axios.get(this.env+'category_product/getcategoryproduct').then((response: {data:any}) => {
                     this.categoryList = response.data.recordsets[0];
                     this.productList = response.data.recordsets[1];
-                    console.log(this.productList)
+                    this.groupList = response.data.recordsets[2];
                 })
             },
             addProduct:function(){
