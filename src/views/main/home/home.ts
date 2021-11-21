@@ -93,6 +93,11 @@ export default Vue.extend({
         getOrderDetail: function(){
             axios.get(this.env+'order/getorderedproduct',{params:{orderid:this.$route.query.orderId}}).then((response:any)=>{
                 response.data.recordset.forEach((element:any) => {
+                    console.log(element);
+                    let mcparr = [];
+                    if(element.mcp){
+                        mcparr = JSON.parse(element.mcp);
+                    }
                     this.itemsInCart.push({
                         key: 0,
                         productid: element.productId,
@@ -102,8 +107,7 @@ export default Vue.extend({
                         total: element.total,
                         orderid: element.orderId,
                         orderedproductid: element.orderProductId,
-                        mcpcart: JSON.parse(element.mcp),
-
+                        mcpcart: mcparr,
                     })
                     this.cartSubTotal += element.total;
                     if(this.discountType == 'Percentage'){
