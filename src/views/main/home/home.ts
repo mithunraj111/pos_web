@@ -271,7 +271,7 @@ export default Vue.extend({
             if(productObj.ismcp == true){
                 console.log(this.multiplemcpgroups);
                 productObj.mcp = this.multiplemcpgroups;
-                productObj.selectedmcpproducts = selectedmcpproducts
+                productObj.mcpcart = selectedmcpproducts
             } else{
                 productObj.mcp = [];
             }
