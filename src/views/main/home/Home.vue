@@ -116,9 +116,9 @@
                         dense disable-pagination hide-default-footer class="elevation-1 mb-3">
                             <template v-slot:[`item.productname`]="{ item }">
                                 <div class="my-3">{{item.productname}}</div>
-                                <div v-for="(mcp,key) in item.mcp" :key="key">
-                                    <div style="white-space:nowrap" v-for="(selectedMcpProd, key) in mcp.selectedProduct" :key="key">{{selectedMcpProd.qty+' '+selectedMcpProd.productname+' '+selectedMcpProd.price}}</div>
-                                </div>
+                                <!-- <div v-for="(mcp,key) in item.mcp" :key="key"> -->
+                                    <div style="white-space:nowrap" v-for="(selectedMcpProd, key) in item.mcpcart" :key="key">{{selectedMcpProd.qty+' '+selectedMcpProd.productname+' '+selectedMcpProd.price}}</div>
+                                <!-- </div> -->
                             </template>
                             <template v-slot:[`item.quantity`]="{ item }">
                                 <span class="mx-1">{{item.quantity}}</span>

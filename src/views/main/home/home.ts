@@ -102,7 +102,8 @@ export default Vue.extend({
                         total: element.total,
                         orderid: element.orderId,
                         orderedproductid: element.orderProductId,
-                        mcp: element.mcp
+                        mcpcart: JSON.parse(element.mcp),
+
                     })
                     this.cartSubTotal += element.total;
                     if(this.discountType == 'Percentage'){
@@ -276,7 +277,6 @@ export default Vue.extend({
                 productObj.mcp = [];
             }
             this.itemsInCart.push(productObj);
-            JSON.parse(JSON.stringify(this.itemsInCart));
             this.cartSubTotal += productObj.calculatedprice;
             if(this.discountType == 'Percentage'){
                 this.cartDiscount = (this.cartSubTotal/100)*this.discountValue;
@@ -431,7 +431,9 @@ export default Vue.extend({
                     msg = 'Payment successful';
                 }
                 this.showHideAlert('success',msg);
-                this.$router.replace({name:'Home'});
+                if(this.$route.query.orderId){
+                    this.$router.replace({name:'Home'});
+                }
             }).catch((err:any)=>{
                 this.showHideAlert('danger', 'Internal Server error');
                 console.log(err);
