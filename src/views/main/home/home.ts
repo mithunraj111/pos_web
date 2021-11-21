@@ -241,6 +241,7 @@ export default Vue.extend({
             let productObj = JSON.parse(JSON.stringify(obj));
             let calculatedprice = 0;
             let isSelected = this.itemsInCart.find((item:any) => item.productid == obj.productid);
+            let selectedmcpproducts = []as any;
             if(isSelected && obj.ismcp==false){
                 this.changeQuantity(obj,'plus');
                 return;
@@ -249,7 +250,7 @@ export default Vue.extend({
                     this.multiplemcpgroups.forEach((element:any) => {
                         element.selectedProduct.forEach((childElement:any) => {
                             calculatedprice += (Number(childElement.price)*childElement.qty);
-                            console.log(calculatedprice);
+                            selectedmcpproducts.push(childElement);
                         });
                     });
                 } else {
@@ -268,7 +269,9 @@ export default Vue.extend({
             productObj.qty = 1;
             productObj.total = (obj.qty * calculatedprice).toFixed(2);
             if(productObj.ismcp == true){
+                console.log(this.multiplemcpgroups);
                 productObj.mcp = this.multiplemcpgroups;
+                productObj.selectedmcpproducts = selectedmcpproducts
             } else{
                 productObj.mcp = [];
             }
