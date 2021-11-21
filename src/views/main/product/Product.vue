@@ -268,7 +268,7 @@
         },
         created(){
             this.getProductCategories();
-            // this.getCategories();
+            this.getCategories();
         }
     })
 </script>
