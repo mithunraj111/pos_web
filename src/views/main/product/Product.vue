@@ -243,7 +243,7 @@
                 this.mcpMappingDialog = true;
             },
             saveMcpGroupMapping:function(){
-                let url = this.env+'/category_product/updatemcproductgroupmapping';
+                let url = this.env+'/category_product/createmcproductgroupmapping';
                 let obj={
                     productid: this.selectedProduct.productid,
                     selectedgroups: this.selectedGroups 
