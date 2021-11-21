@@ -37,6 +37,7 @@
                     <v-switch v-model="productStatus" label="Status" class="mb-3" inset hide-details></v-switch>
                     <v-switch v-model="isVariable" label="Is variable?" class="mb-3" inset hide-details></v-switch>
                     <v-switch v-model="isMcp" label="Is MCP?" class="mb-3" inset hide-details></v-switch>
+                    <v-switch v-model="sellontill" label="Sell on till" class="mb-3" inset hide-details></v-switch>
                     <v-btn block large class="mt-5 primary secondary--text" @click="saveProduct()">Save</v-btn>
                 </v-col>
             </v-row>
@@ -125,6 +126,7 @@
                 productStatus: true,
                 isVariable: false,
                 isCustomisable: false,
+                sellontill: false,
                 isMcp: false,
                 sname: [] as any,
                 sprice: [] as any,
@@ -182,6 +184,7 @@
                 this.isVariable = obj.isvariable;
                 this.isMcp = obj.ismcp;
                 this.isCustomisable = obj.iscustomizable;
+                this.sellontill = obj.sellontill;
                 this.editView=true;
             },
             saveProduct: function(){
@@ -194,6 +197,7 @@
                     isvariable: this.isVariable,
                     ismcp: this.isMcp,
                     iscustomizable: this.isCustomisable,
+                    sellontill: this.sellontill,
                     mcparr: this.mcpArr
                 }
                 if(this.selectedId){

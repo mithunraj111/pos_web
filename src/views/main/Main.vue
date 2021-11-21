@@ -1,6 +1,7 @@
 <template>
   <div>
     <v-app-bar clipped-left app dense elevation="0">
+      <v-icon @click="menuVariant=!menuVariant" left>mdi-menu</v-icon>
       <span class="primary--text lighten-4 font-weight-medium" style="letter-spacing: 1px;font-size: 12px">
         <span class="primary--text font-weight-black">B</span>USINESS&nbsp;
         <span class="primary--text font-weight-black">M</span>ANAGEMENT
@@ -29,12 +30,12 @@
         </v-list>
       </v-menu>
     </v-app-bar>
-    <v-navigation-drawer app clipped :permanent="checkIfPermanent" :mini-variant="true" v-model="menuSidebar" :style="checkIfPermanent?'top:48px!important':''">
+    <v-navigation-drawer app clipped :permanent="checkIfPermanent" :mini-variant="menuVariant" v-model="menuSidebar" :style="checkIfPermanent?'top:48px!important':''" width="200">
       <v-list>
         <v-list-item v-for="(link,key) in navigationList" :key="key" :to="link.to" link>
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
-              <v-icon v-bind="attrs" v-on="on">{{link.shape}}</v-icon>
+              <v-icon left v-bind="attrs" v-on="on">{{link.shape}}</v-icon><span class="overline">{{link.name}}</span>
             </template>
             <span>{{link.name}}</span>
           </v-tooltip>
@@ -97,6 +98,7 @@ export default Vue.extend({
       currentpwd: '',
       newpwd: '',
       reenterpwd: '',
+      menuVariant: false
     }
   },
   computed: {

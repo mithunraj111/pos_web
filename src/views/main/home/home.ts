@@ -99,7 +99,6 @@ export default Vue.extend({
                         mcparr = JSON.parse(element.mcp);
                     }
                     this.itemsInCart.push({
-                        key: 0,
                         productid: element.productId,
                         productname: element.productName,
                         calculatedprice: element.price,
@@ -194,13 +193,13 @@ export default Vue.extend({
             let selectedMcpArr = JSON.parse(obj.mcgroup);
             let arr=[];
             if(obj.ismcp){
+                console.log(this.groupList);
                 for(let i=0;i<this.groupList.length;i++){
                     if(typeof this.groupList[i].mcproductgroup == 'string'){
                         this.groupList[i].mcproductgroup = this.groupListTemp[i].mcproductgroup = JSON.parse(this.groupList[i].mcproductgroup);
                     }
                     for(let k=0;k<this.groupList[i].mcproductgroup.length;k++){
                         Vue.set(this.groupList[i].mcproductgroup[k],'qty',0);
-                        this.groupList[i].mcproductgroup[k].qty=this.groupListTemp[i].mcproductgroup[k].qty=0;
                     }
                     for(let j=0;j<selectedMcpArr.length;j++){
                         if(this.groupList[i].groupid==selectedMcpArr[j].groupid){
@@ -251,6 +250,7 @@ export default Vue.extend({
                 this.changeQuantity(obj,'plus');
                 return;
             } else{
+                calculatedprice = obj.price;
                 if(obj.ismcp==true){
                     this.multiplemcpgroups.forEach((element:any) => {
                         element.selectedProduct.forEach((childElement:any) => {
@@ -258,23 +258,20 @@ export default Vue.extend({
                             selectedmcpproducts.push(childElement);
                         });
                     });
-                } else {
-                    calculatedprice = obj.price;
                 }
                 obj.qty=1;
             }
-            if(this.itemsInCart.length>0){
-                productObj.key = +this.itemsInCart[this.itemsInCart.length-1].key + 1;
-            } else {
-                productObj.key = 0;
-            }
+            // if(this.itemsInCart.length>0){
+            //     productObj.key = +this.itemsInCart[this.itemsInCart.length-1].key + 1;
+            // } else {
+            //     productObj.key = 0;
+            // }
             productObj.calculatedprice = calculatedprice;
             productObj.orderedproductid = "";
             productObj.orderid = "";
             productObj.qty = 1;
             productObj.total = (obj.qty * calculatedprice).toFixed(2);
             if(productObj.ismcp == true){
-                console.log(this.multiplemcpgroups);
                 productObj.mcp = this.multiplemcpgroups;
                 productObj.mcpcart = selectedmcpproducts
             } else{
