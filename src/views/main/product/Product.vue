@@ -59,13 +59,13 @@
             <v-card>
                 <v-card-title>Select groups for {{selectedProduct.productname}}</v-card-title>
                 <v-card-text>
-                    <v-select v-model="selectedGroups" :items="groupList" label="Select groups" multiple outlined item-text="groupname" item-value="groupid">
+                    <v-select v-model="selectedGroups" :items="groupList" label="Select groups" multiple outlined item-text="groupname" item-value="groupid" return-object>
                         <template v-slot:selection="{ item, index }">
                             <v-chip v-if="index === 0"><span>{{ item.groupname }}</span></v-chip>
                             <span v-if="index === 1" class="grey--text text-caption">(+{{ selectedGroups.length - 1 }} others)</span>
                         </template>
                     </v-select>
-                    <v-simple-table v-if="selectedGroups.length>0" dense>
+                    <v-simple-table dense>
                         <template v-slot:default>
                             <thead>
                                 <tr>
@@ -74,12 +74,15 @@
                                     <th class="text-left">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody v-if="selectedGroups.length>0">
                                 <tr v-for="(item,key) in selectedGroups" :key="key">
                                     <td>{{ item.groupname }}</td>
-                                    <td><v-switch inset dense v-model="item.status" hide-details class="mt-0"></v-switch></td>
+                                    <td><v-switch inset dense v-model="item.status" :true-value="'1'" :false-value="'0'" hide-details class="mt-0"></v-switch></td>
                                     <td><v-btn icon><v-icon>mdi-delete</v-icon></v-btn></td>
                                 </tr>
+                            </tbody>
+                            <tbody v-else>
+                                <tr><td colspan="5" class="text-center overline hint--text">No groups added</td></tr>
                             </tbody>
                             </template>
                     </v-simple-table>
@@ -225,7 +228,7 @@
                 let apiUrl = `${this.env}category_product/createcategory`;
                 let requestBody = {
                     categoryname: this.categoryName,
-                    status: 'A'
+                    status: 1
                 }as any;
                 axios.post(apiUrl, requestBody).then((response:{data:any})=>{
                     this.addCategoryDialog=false;
@@ -237,7 +240,6 @@
             groupSettings: function(obj:any){
                 this.selectedProduct = obj;
                 this.selectedGroups= this.mcpMappedGroup.filter((element: any)=>{
-                    console.log()
                     return element.productid == obj.productid;
                 })
                 this.mcpMappingDialog = true;
