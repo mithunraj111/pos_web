@@ -173,7 +173,7 @@
                     <v-card-actions>
                         <v-row no-gutters>
                             <v-col cols="3" class="pl-3 pr-1 pb-2">
-                                <v-btn class="primary secondary--text" block :disabled="itemsInCart.length<1" @click="confirmPayment(1)">Order</v-btn>
+                                <v-btn class="primary secondary--text" block :disabled="itemsInCart.length<1" @click="getUserData(1)">Order</v-btn>
                             </v-col>
                             <v-col cols="3" class="pl-3 pr-1 pb-2">
                                 <v-btn class="primary secondary--text" block :disabled="itemsInCart.length<1" @click="paymentDialog=true;balanceAmount=Number(tenderAmount)-cartTotal">Pay</v-btn>
@@ -356,6 +356,26 @@
                     <v-row no-gutters>
                         <v-col cols="12"><v-btn class="rounded-0 primary secondary--text" large block @click="saveProductNotes()">Submit</v-btn></v-col>
                         <v-col cols="12"><v-btn class="rounded-0" large block @click="notesTemp='';notesEditDialog=false">Cancel</v-btn></v-col>
+                    </v-row>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+        <v-dialog v-model="userDataDialog" width="400" max-width="90%" persistent>
+            <v-card>
+                <v-card-title>Customer information</v-card-title>
+                <v-card-text>
+                    <v-text-field dense hide-details outlined class="mb-3" label="First Name" v-model="cfname"></v-text-field>
+                    <v-text-field dense hide-details outlined class="mb-3" label="Last Name" v-model="clname"></v-text-field>
+                    <v-text-field dense hide-details outlined class="mb-3" label="Phone" v-model="cphone"></v-text-field>
+                    <v-text-field dense hide-details outlined class="mb-3" label="Email" v-model="cmail"></v-text-field>
+                    <v-text-field dense hide-details outlined class="mb-3" label="Address line 1" v-model="cadd"></v-text-field>
+                    <v-text-field dense hide-details outlined class="mb-3" label="Address line 2" v-model="cadd2"></v-text-field>
+                    <v-text-field dense hide-details outlined class="mb-3" label="Postal Code" v-model="cpostcode"></v-text-field>
+                </v-card-text>
+                <v-card-actions class="pa-0">
+                    <v-row no-gutters>
+                        <v-col cols="12"><v-btn x-large block class="rounded-0 primary" @click="submitUserData();userDataDialog=false">Continue</v-btn></v-col>
+                        <v-col cols="12"><v-btn x-large block class="rounded-0" @click="userDataDialog=false">Cancel</v-btn></v-col>
                     </v-row>
                 </v-card-actions>
             </v-card>

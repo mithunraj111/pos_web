@@ -58,6 +58,7 @@ export default Vue.extend({
         notesEditDialog: false,
         addMiscProductDialog: false,
         addMcpToCartDialog:false,
+        userDataDialog: false,
         notesTemp: '',
         selectedObj: '' as any,
         diningId: 1,
@@ -71,6 +72,14 @@ export default Vue.extend({
         showAlert: false,
         alertType: 'success' as any,
         alertText: ''as any,
+        cfname: '',
+        clname: '',
+        cphone: '',
+        cmail: '',
+        cadd: '',
+        cadd2: '',
+        cpostcode: '',
+        customerid: ''
     }),
     mounted(){
         this.getProductCategory();
@@ -93,7 +102,6 @@ export default Vue.extend({
         getOrderDetail: function(){
             axios.get(this.env+'order/getorderedproduct',{params:{orderid:this.$route.query.orderId}}).then((response:any)=>{
                 response.data.recordset.forEach((element:any) => {
-                    console.log(element);
                     let mcparr = [];
                     if(element.mcp){
                         mcparr = JSON.parse(element.mcp);
@@ -193,7 +201,6 @@ export default Vue.extend({
             let selectedMcpArr = JSON.parse(obj.mcgroup);
             let arr=[];
             if(obj.ismcp){
-                console.log(this.groupList);
                 for(let i=0;i<this.groupList.length;i++){
                     if(typeof this.groupList[i].mcproductgroup == 'string'){
                         this.groupList[i].mcproductgroup = this.groupListTemp[i].mcproductgroup = JSON.parse(this.groupList[i].mcproductgroup);
@@ -275,6 +282,7 @@ export default Vue.extend({
                 productObj.mcp = this.multiplemcpgroups;
                 productObj.mcpcart = selectedmcpproducts
             } else{
+                productObj.mcpcart = [];
                 productObj.mcp = [];
             }
             this.itemsInCart.push(productObj);
@@ -391,6 +399,33 @@ export default Vue.extend({
         //     this.paymentDialog = false;
         //     this.paymentMethodDialog = true;
         // },
+        getUserData: function(type: any){
+            this.orderStatus = type;
+            this.cfname = '';
+            this.clname = '';
+            this.cphone = '';
+            this.cmail = '';
+            this.cadd = '';
+            this.cadd2 = '';
+            this.cpostcode = '';
+            this.userDataDialog = true;
+        },
+        submitUserData: function(){
+            let obj = {
+                firstname: this.cfname,
+                lastname: this.clname,
+                mobile: this.cphone,
+                email: this.cmail,
+                addressline: this.cadd,
+                addressline2: this.cadd2,
+                postcode: this.cpostcode,
+            }
+            let url = this.env+"/customer/CreateAndGetCustomerId"
+            axios.post(url, obj).then((response:any)=>{
+                this.customerid = response.data.rcordsets[0].customerid;
+            })
+            this.confirmPayment(this.orderStatus);
+        },
         confirmPayment: function(type: any){
             // this.confirmPaymentDialog = true;
             let apiUrl = `${this.env}order/`;
@@ -403,7 +438,7 @@ export default Vue.extend({
                 this.totalQty += element.qty
             });
             requestObj={
-                customerid: "",    
+                customerid: this.customerid,    
                 customeraccid: "",
                 qty: this.totalQty,
                 fromorder: 'POS',
